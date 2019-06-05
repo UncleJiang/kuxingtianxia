@@ -1,27 +1,25 @@
-package com.example.codeplay.kuxing.Fragment;
+package com.example.codeplay.kuxing.Activity;
 
-
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
+import com.example.codeplay.kuxing.Adapter.CommunityAdapter;
 import com.example.codeplay.kuxing.Adapter.UserComAdapter;
 import com.example.codeplay.kuxing.Entity.Event;
 import com.example.codeplay.kuxing.R;
@@ -36,30 +34,36 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-
-public class FragmentMy extends Fragment  {
+public class FriendActivity extends AppCompatActivity {
     private UserComAdapter userComAdapter;
     private ArrayList<Event> gData = null;
     private Context mContext;
     private ListView listView;
-    private ImageView Imageback;
     private Map<String, String> data;
+    private Map<String, String> data1;
     private ArrayList<Map<String, String>> group = new ArrayList<Map<String, String>>();
+    private TextView signature;
+    private ArrayList<Map<String, String>> group1 = new ArrayList<Map<String, String>>();
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.activity_user, container, false);
-        Imageback = view.findViewById(R.id.huitui);
-        Imageback.setVisibility(View.INVISIBLE);
-        listView = (ListView) view.findViewById(R.id.user_community);
-        Log.i("ccc","111");
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_user);
+        mContext = FriendActivity.this;
+        listView = (ListView) findViewById(R.id.user_community);
 
-        mContext = getActivity();
-
+        Intent intent = getIntent();
+        String userName = intent.getStringExtra("userName");
+        TextView username =findViewById(R.id.userName);
+        username.setText(userName);
+        signature = findViewById(R.id.signature);
+        //设置列表不可见
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        spinner.setVisibility(View.INVISIBLE);
         //读取数据库内容
         data = new HashMap<>();
         data.put("username", "codeplay");
         data.put("token", "44c42b0bc9a88d630c0574367dc56d525cf5d161");
-        data.put("author","codeplay");
+        data.put("author",userName);
         RequestQueue requestQueue = Volley.newRequestQueue(mContext);
         Request<JSONObject> request = new NormalPostRequest("http://120.79.159.186:8080/note/author",
                 new Response.Listener<JSONObject>() {
@@ -99,39 +103,62 @@ public class FragmentMy extends Fragment  {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        Log.d("ccc", "response -> " + response.toString());
+                        Log.d("bbb", "response -> " + response.toString());
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e("ccc", error.getMessage(), error);
+                Log.e("bbb", error.getMessage(), error);
             }
         }, data);
+
+        data1 = new HashMap<>();
+        data1.put("username",userName);
+        data1.put("token", "44c42b0bc9a88d630c0574367dc56d525cf5d161");
+        Request<JSONObject> request1 = new NormalPostRequest("http://120.79.159.186:8080/user/info",
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray res = response.getJSONArray("data");
+                            for (int i = 0; i < res.length(); i++) {
+                                Map<String, String> map = new HashMap<>();
+                                map.put("Id", res.getJSONObject(i).getString("Id"));
+                                map.put("Username", res.getJSONObject(i).getString("Username"));
+                                map.put("Signature", res.getJSONObject(i).getString("Signature"));
+                                map.put("Avatar", res.getJSONObject(i).getString("Avatar"));
+                                group1.add(map);
+                            }
+                            signature.setText(group1.get(0).get("Signature"));
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        Log.d("bbb", "response -> " + response.toString());
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("bbb", error.getMessage(), error);
+            }
+        }, data1);
         requestQueue.add(request);
+        requestQueue.add(request1);
 
-        Log.i("ccc","111");
-        //设置两个图片不可见
-        ImageButton imageButton = (ImageButton) view.findViewById(R.id.imageButton5);
-        imageButton.setVisibility(View.INVISIBLE);
-        ImageView imageView = (ImageView) view.findViewById(R.id.addfriend);
-        imageView.setVisibility(View.INVISIBLE);
+    }
 
-        return view;
-    }
     @Override
-    public void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
     }
+
     @Override
-    public void onPause() {
-        super.onPause();
+    protected void onStop() {
+        super.onStop();
     }
+
     @Override
-    public void onDestroy() {
+    protected void onDestroy() {
         super.onDestroy();
     }
-
 }
-
-
-
